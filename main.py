@@ -1,126 +1,154 @@
-import sys
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QPushButton, QLabel, QVBoxLayout,
-    QStackedWidget, QHBoxLayout, QCheckBox, QTextEdit, QMessageBox
-)
-import io
-import contextlib
+from tkinter import *
+from tkinter import ttk
+from tkinter.scrolledtext import ScrolledText
+from ttkbootstrap import Style
+from ttkbootstrap.widgets import Checkbutton
+import threading
+import time
 
-# Real cleaning modules
-import Browser as bs
+# Import your cleanup modules
 import TempCleaning as tc
 import Temp32Cleaning as tc32
 import Recycle as rc
+import Browser as bs
 
-class MainScreen(QWidget):
-    def __init__(self, stacked_widget):
+class MainScreen(Tk):
+    def __init__(self):
         super().__init__()
-        self.stacked_widget = stacked_widget
-        layout = QVBoxLayout()
+        self.title("FullCleaner by MDSHARIK")
+        self.geometry("1024x768")
+        self.configure(bg="#2b2b2b")
+        self.resizable(False, False)
 
-        title = QLabel("🧹 PyCleaner")
-        title.setStyleSheet("font-size: 32px; font-weight: bold;")
-        layout.addWidget(title)
+        style = Style(theme="darkly")  # Ensure 'darkly' theme is available
 
-        subtitle = QLabel("Clean your PC with one click!")
-        layout.addWidget(subtitle)
+        self.selected_scan = StringVar(value="")
+        self.scan_running = False
 
-        full_btn = QPushButton("Full Scan")
-        full_btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
-        layout.addWidget(full_btn)
+        
 
-        custom_btn = QPushButton("Custom Scan")
-        custom_btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(2))
-        layout.addWidget(custom_btn)
+        # Load and place images
+        Label(self, text="Select Scan Type", font=("Segoe UI", 10),
+              foreground="gray", background="#2b2b2b").place(x=100, y=10)
+        self.full_img = PhotoImage(file="full.png").subsample(2, 2)
+        self.custom_img = PhotoImage(file="custom.png").subsample(2, 2)
 
-        self.setLayout(layout)
+        img_frame = Frame(self, bg="#2b2b2b")
+        img_frame.place(relx=0.5, y=50, anchor="n")
 
-class ScanScreen(QWidget):
-    def __init__(self, full_scan=False):
-        super().__init__()
-        self.full_scan = full_scan
-        self.setupUI()
+        self.full_label = Label(img_frame, image=self.full_img, bg="#2b2b2b", bd=5, relief="flat")
+        self.full_label.config(highlightbackground="#2b2b2b", highlightthickness=2, bd=2)
+        self.full_label.pack(side=LEFT, padx=40)
+        self.full_label.bind("<Button-1>", lambda e: self.select_scan("full"))
 
-    def setupUI(self):
-        layout = QVBoxLayout()
+        self.custom_label = Label(img_frame, image=self.custom_img, bg="#2b2b2b", bd=5, relief="flat")
+        self.custom_label.config(highlightbackground="#2b2b2b", highlightthickness=2, bd=2)
+        self.custom_label.pack(side=LEFT, padx=40)
+        self.custom_label.bind("<Button-1>", lambda e: self.select_scan("custom"))
 
-        title = QLabel("🧹 PyCleaner - Full Scan" if self.full_scan else "🧹 PyCleaner - Custom Scan")
-        title.setStyleSheet("font-size: 24px; font-weight: bold; margin-bottom: 10px;")
-        layout.addWidget(title)
+        # Checkboxes
+        Label(self, text="Tasks", font=("Segoe UI", 10),
+              foreground="gray", background="#2b2b2b").place(x=100, y=320)
+        self.options = [
+            ("Recycle Bin", rc.RecycleBin),
+            ("Temp", tc.TempCleaning),
+            ("Temp32", tc32.Temp32Cleaning),
+            ("Edge", bs.edgeCleanup),
+            ("Firefox", bs.firefoxCleanup),
+            ("Chrome", bs.chromeCleanup),
+            ("Brave", bs.braveCleanup),
+            ("Opera", bs.operaCleanup),
+        ]
+        self.checkbox_vars = []
+        # Adjusted placement for checkbuttons
+        for idx, (opt, _) in enumerate(self.options):
+            var = IntVar()
+            chk = Checkbutton(self, text=opt, variable=var, bootstyle="success-round-toggle")
+            chk.place(x=100 + (idx % 4) * 220, y=360 + (idx // 4) * 40)
+            self.checkbox_vars.append((var, chk))
+            for var, chk in self.checkbox_vars:
+                var.set(1)
+                chk.config(state=DISABLED)
 
-        self.checks = {
-            "Temp": QCheckBox("Clean Temp Folder"),
-            "Temp32": QCheckBox("Clean Temp (System32)"),
-            "Recycle": QCheckBox("Empty Recycle Bin"),
-            "Chrome": QCheckBox("Clean Chrome Cache"),
-            "Edge": QCheckBox("Clean Edge Cache"),
-            "Firefox": QCheckBox("Clean Firefox Cache"),
-            "Brave": QCheckBox("Clean Brave Cache"),
-            "Opera": QCheckBox("Clean Opera Cache")
-        }
 
-        for cb in self.checks.values():
-            if self.full_scan:
-                cb.setChecked(True)
-            layout.addWidget(cb)
+        # Progress section
+        Label(self, text="Progress", font=("Segoe UI", 10), foreground="white", background="#2b2b2b").place(x=100, y=460)
+        self.progress = ttk.Progressbar(self, length=800, mode="determinate")
+        self.progress.place(x=100, y=490)
 
-        self.runBtn = QPushButton("Run Cleaner")
-        self.runBtn.clicked.connect(self.runCleaner)
-        layout.addWidget(self.runBtn)
+        self.progress_percent = Label(self, text="", font=("Segoe UI", 10), background="#2b2b2b", foreground="white")
+        self.progress_percent.place(x=860, y=460)
 
-        self.output = QTextEdit()
-        self.output.setReadOnly(True)
-        self.output.setStyleSheet("background-color: #1e1e1e; color: #dcdcdc; font-family: Consolas;")
-        layout.addWidget(self.output)
+        # Console logger
+        self.console = ScrolledText(self, height=6, bg="#1e1e1e", fg="white", insertbackground="white", font=("Segoe UI", 10))
+        self.console.place(x=100, y=530, width=800)
 
-        back_btn = QPushButton("← Back")
-        back_btn.clicked.connect(self.goBack)
-        layout.addWidget(back_btn)
+        # Scan Button
+        self.scan_btn = Button(self, text="Run Scan", command=self.start_scan)
+        self.scan_btn.place(relx=0.5, y=740, anchor="center")
 
-        self.setLayout(layout)
+    def log(self, message):
+        self.console.insert(END, message + "\n")
+        self.console.see(END)
 
-    def runCleaner(self):
-        self.output.clear()
+    def select_scan(self, scan_type):
+        self.selected_scan.set(scan_type)
 
-        log_stream = io.StringIO()
-        with contextlib.redirect_stdout(log_stream):
-            if self.checks["Temp"].isChecked():
-                tc.TempCleaning()
-            if self.checks["Temp32"].isChecked():
-                tc32.Temp32Cleaning()
-            if self.checks["Recycle"].isChecked():
-                rc.RecycleBin()
-            if self.checks["Chrome"].isChecked():
-                bs.chromeCleanup()
-            if self.checks["Edge"].isChecked():
-                bs.edgeCleanup()
-            if self.checks["Firefox"].isChecked():
-                bs.firefoxCleanup()
-            if self.checks["Brave"].isChecked():
-                bs.braveCleanup()
-            if self.checks["Opera"].isChecked():
-                bs.operaCleanup()
+        if scan_type == "full":
+            self.full_label.config(highlightbackground="lime", highlightthickness=2, bd=2)
+            self.custom_label.config(highlightbackground="#2b2b2b", highlightthickness=2, bd=2)
+            for var, chk in self.checkbox_vars:
+                var.set(1)
+                chk.config(state=DISABLED)
+            
+        else:
+            self.custom_label.config(highlightbackground="lime", highlightthickness=2, bd=2)
+            self.full_label.config(highlightbackground="#2b2b2b", highlightthickness=2, bd=2)
 
-        log_output = log_stream.getvalue()
-        self.output.setPlainText(log_output)
-        QMessageBox.information(self, "Cleaning Complete", "Selected cleanups are done!")
+            for var, chk in self.checkbox_vars:
+                var.set(0)
+                chk.config(state=NORMAL)
 
-    def goBack(self):
-        self.parent().setCurrentIndex(0)
+    def start_scan(self):
+        if self.selected_scan.get() == "":
+            self.log("⚠️ Please select a scan mode first!")
+            return
+
+        if not self.scan_running:
+            self.scan_running = True
+            self.scan_btn.config(text="Running Scan", state=DISABLED)
+            self.progress["value"] = 0
+            self.progress_percent.config(text="0%")
+            self.console.delete("1.0", END)
+            threading.Thread(target=self.run_scan_progress).start()
+
+    def run_scan_progress(self):
+        selected_tasks = [func for (var, _), (_, func) in zip(self.checkbox_vars, self.options) if var.get()]
+
+        total_tasks = len(selected_tasks)
+        if total_tasks == 0:
+            self.log("⚠️ No tasks selected.")
+            self.scan_btn.config(text="Run Scan", state=NORMAL)
+            self.scan_running = False
+            return
+
+        progress_increment = 100 / total_tasks
+
+        for i, task in enumerate(selected_tasks, start=1):
+            task_name = self.options[[func for _, func in self.options].index(task)][0]
+            self.log(f"🔄 Running {task_name} cleanup...")
+            task()
+            self.progress["value"] = i * progress_increment
+            self.progress_percent.config(text=f"{int(i * progress_increment)}%")
+            self.update_idletasks()
+            time.sleep(0.5)  # Simulate time taken for each task
+
+        self.progress["value"] = 100
+        self.progress_percent.config(text="100%")
+        self.log("✅ Scan complete! Your PC feels lighter already 😉")
+        self.scan_btn.config(text="Run Scan", state=NORMAL)
+        self.scan_running = False
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-
-    stacked_widget = QStackedWidget()
-    main_screen = MainScreen(stacked_widget)
-    full_scan_screen = ScanScreen(full_scan=True)
-    custom_scan_screen = ScanScreen(full_scan=False)
-
-    stacked_widget.addWidget(main_screen)
-    stacked_widget.addWidget(full_scan_screen)
-    stacked_widget.addWidget(custom_scan_screen)
-
-    stacked_widget.setFixedSize(520, 650)
-    stacked_widget.show()
-
-    sys.exit(app.exec_())
+    app = MainScreen()
+    app.mainloop()
