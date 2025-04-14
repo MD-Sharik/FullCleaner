@@ -436,10 +436,10 @@ class MainWindow(QMainWindow):
         self.logout_btn.setCursor(Qt.PointingHandCursor)
         self.logout_btn.clicked.connect(self.logout)
         
-        # Get the top bar layout
-        if hasattr(widgets, "titleRightBox"):
-            # Add button to title right box
-            widgets.titleRightBox.layout().insertWidget(0, self.logout_btn)
+        # Get the title bar's right buttons area
+        if hasattr(widgets, "rightButtons"):
+            # Insert the logout button before the settings button
+            widgets.rightButtons.layout().insertWidget(0, self.logout_btn)
         
         # Update login status display
         self.update_login_display()
@@ -486,16 +486,23 @@ class MainWindow(QMainWindow):
                 self.update_login_display()
     
     def logout(self):
-        """Log out the user by clearing session data"""
+        """Log out the user by clearing all session and license data"""
         try:
-            # Clear file
+            # Clear session file (contains ID and EMAIL)
             if os.path.exists("session.json"):
                 os.remove("session.json")
+            
+            # Clear license file (contains KEY)
+            if os.path.exists("license.json"):
+                os.remove("license.json")
+                # Reset license status
+                self.license_status = False
+                self.update_license_display()
                 
             self.session_active = False
             self.update_login_display()
             
-            QMessageBox.information(self, "Logged Out", "You have been logged out successfully")
+            QMessageBox.information(self, "Logged Out", "You have been logged out successfully. All user data has been removed from the system.")
         except Exception as e:
             print(f"Logout error: {str(e)}")
             QMessageBox.warning(self, "Error", "Could not complete logout")
