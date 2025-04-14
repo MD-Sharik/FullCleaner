@@ -12,6 +12,16 @@ import Temp32Cleaning as tc32
 import Recycle as rc
 import Browser as bs
 
+def showLicence_Popup():
+    popup = Toplevel()
+    popup.title("License Info")
+    popup.geometry("400x200")
+    popup.configure(bg="#2b2b2b")
+    Label(popup, text="Licensed to: MDSHARIK", font=("Segoe UI", 14), fg="white", bg="#2b2b2b").pack(pady=(20, 10))
+    Label(popup, text="License Type: Lifetime\nValid until: Never Expires", font=("Segoe UI", 12),
+          fg="#cccccc", bg="#2b2b2b", justify=LEFT).pack(pady=(0, 20))
+    Button(popup, text="Close", command=popup.destroy).pack(pady=10)
+
 class MainScreen(Tk):
     def __init__(self):
         super().__init__()
@@ -25,11 +35,16 @@ class MainScreen(Tk):
         self.selected_scan = StringVar(value="")
         self.scan_running = False
 
-        
+        # License Button (popup trigger)
+        self.license_btn = Button(self, text="License", bootstyle="danger-round", command=showLicence_Popup)
+        self.license_btn.place(x=10, y=10)
+
+
 
         # Load and place images
         Label(self, text="Select Scan Type", font=("Segoe UI", 10),
               foreground="gray", background="#2b2b2b").place(x=100, y=10)
+        
         self.full_img = PhotoImage(file="full.png").subsample(2, 2)
         self.custom_img = PhotoImage(file="custom.png").subsample(2, 2)
 
