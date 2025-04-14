@@ -72,7 +72,6 @@ Left Menu */
 }
 #topLogo {
 	background-color: rgb(33, 37, 43);
-	background-image: url(:/images/images/images/PyDracula.png);
 	background-position: centered;
 	background-repeat: no-repeat;
 }
@@ -1863,9 +1862,9 @@ p, li { white-space: pre-wrap; }
                      </property>
                      <widget class="QWidget" name="home">
                       <property name="styleSheet">
-                       <string notr="true">background-image: url(:/images/images/images/PyDracula_vertical.png);
+                       <!-- <string notr="true">background-image: url(:/images/images/images/PyDracula_vertical.png);
 background-position: center;
-background-repeat: no-repeat;</string>
+background-repeat: no-repeat;</string> -->
                       </property>
                      </widget>
                      <widget class="QWidget" name="widgets">

@@ -20,6 +20,7 @@ DARK THEME - DRACULA COLOR BASED
 QWidget{
 	color: rgb(221, 221, 221);
 	font: 10pt "Segoe UI";
+    background-image: none;  /* Explicitly disable background image for all widgets */
 }
 
 /* /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +53,8 @@ Left Menu */
 }
 #topLogo {
 	background-color: rgb(33, 37, 43);
-	background-image: url(:/images/images/images/PyDracula.png);
+	/* Removed Dracula image */
+	
 	background-position: centered;
 	background-repeat: no-repeat;
 }
@@ -131,7 +133,7 @@ Extra Tab */
 #extraIcon {
 	background-position: center;
 	background-repeat: no-repeat;
-	background-image: url(:/icons/images/icons/icon_settings.png);
+	background-image: none; /* Removed settings icon */
 }
 
 /* Label */
@@ -141,6 +143,16 @@ Extra Tab */
 #extraCloseColumnBtn { background-color: rgba(255, 255, 255, 0); border: none;  border-radius: 5px; }
 #extraCloseColumnBtn:hover { background-color: rgb(196, 161, 249); border-style: solid; border-radius: 4px; }
 #extraCloseColumnBtn:pressed { background-color: rgb(180, 141, 238); border-style: solid; border-radius: 4px; }
+
+/* Home page */
+#home {
+    background-image: none;
+}
+
+/* Custom scan widget */
+#scanWidget {
+    background-image: none;
+}
 
 /* Extra Content */
 #extraContent{
@@ -421,7 +433,7 @@ QComboBox::drop-down {
 	border-left-style: solid;
 	border-top-right-radius: 3px;
 	border-bottom-right-radius: 3px;	
-	background-image: url(:/icons/images/icons/cil-arrow-bottom.png);
+	background-image: none; /* Removed arrow icon */
 	background-position: center;
 	background-repeat: no-reperat;
  }
