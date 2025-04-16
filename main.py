@@ -1,19 +1,3 @@
-# ///////////////////////////////////////////////////////////////
-#
-# BY: WANDERSON M.PIMENTA
-# PROJECT MADE WITH: Qt Designer and PySide6
-# V: 1.0.0
-#
-# This project can be used freely for all uses, as long as they maintain the
-# respective credits only in the Python scripts, any information in the visual
-# interface (GUI) can be modified without any implication.
-#
-# There are limitations on Qt licenses if you want to use your products
-# commercially, I recommend reading them on the official website:
-# https://doc.qt.io/qtforpython/licenses.html
-#
-# ///////////////////////////////////////////////////////////////
-
 import sys
 import os
 import platform
@@ -21,24 +5,23 @@ import threading
 import time
 import json
 import requests
-
-# IMPORT / GUI AND MODULES AND WIDGETS
-# ///////////////////////////////////////////////////////////////
+import psutil
 from modules import *
 from widgets import *
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtWidgets import QProgressBar, QTextEdit, QVBoxLayout, QHBoxLayout, QWidget, QCheckBox, QLabel, QPushButton, QFrame, QDialog, QLineEdit, QMessageBox
+from PySide6.QtWidgets import QProgressBar, QTextEdit, QVBoxLayout, QHBoxLayout, QWidget, QCheckBox, QLabel, QPushButton, QFrame, QDialog, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QListWidget, QListWidgetItem, QHeaderView
 
-# Import cleaning modules
 import TempCleaning as tc
 import Temp32Cleaning as tc32
 import Recycle as rc
 import Browser as bs
 
-os.environ["QT_FONT_DPI"] = "96" # FIX Problem for High DPI and Scale above 100%
+import startup_manager
+import registery_cleaner
+import ram_booster
+import enhanced_cleaner
 
-# SET AS GLOBAL WIDGETS
-# ///////////////////////////////////////////////////////////////
+os.environ["QT_FONT_DPI"] = "96"
 widgets = None
 
 class LoginDialog(QDialog):
@@ -111,7 +94,7 @@ class LoginDialog(QDialog):
         try:
             # Connect to authentication endpoint
             response = requests.post(
-                "http://localhost:3000/login",
+                "https://full-cleaner-backend.vercel.app/login",
                 json={"email": email, "password": password},
                 timeout=5
             )
@@ -145,7 +128,7 @@ class LoginDialog(QDialog):
         try:
             # Check if user already has a license key
             response = requests.post(
-                "http://localhost:3000/havekey",
+                "https://full-cleaner-backend.vercel.app/havekey",
                 json={"id": user_id},
                 timeout=5
             )
@@ -235,7 +218,7 @@ class LicenseDialog(QDialog):
                 
             # Request license key generation
             response = requests.post(
-                "http://localhost:3000/generate",
+                "https://full-cleaner-backend.vercel.app/generate",
                 json={"id": user_id, "email": email},
                 timeout=5
             )
@@ -361,12 +344,20 @@ class MainWindow(QMainWindow):
 
         # Remove unused buttons from the sidebar
         self.remove_unused_menu_buttons()
+        
+        # Add optimization buttons to sidebar
+        self.add_optimization_buttons()
 
         # Set up home page layout
         self.setup_home_page()
 
         # Create scanning interface
         self.setup_scanning_interface()
+        
+        # Create optimization feature pages
+        self.setup_startup_page()
+        self.setup_registry_page()
+        self.setup_ram_page()
 
         # Setup license information in footer
         self.setup_license_display()
@@ -377,6 +368,9 @@ class MainWindow(QMainWindow):
         # BUTTONS CLICK
         # ///////////////////////////////////////////////////////////////
         widgets.btn_home.clicked.connect(self.buttonClick)
+        widgets.btn_startup.clicked.connect(self.buttonClick)
+        widgets.btn_registry.clicked.connect(self.buttonClick)
+        widgets.btn_ram.clicked.connect(self.buttonClick)
 
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
@@ -901,6 +895,18 @@ class MainWindow(QMainWindow):
             widgets.stackedWidget.setCurrentWidget(widgets.home)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
+        elif btnName == "btn_startup":
+            widgets.stackedWidget.setCurrentWidget(widgets.startup_page)
+            UIFunctions.resetStyle(self, btnName)
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
+        elif btnName == "btn_registry":
+            widgets.stackedWidget.setCurrentWidget(widgets.registry_page)
+            UIFunctions.resetStyle(self, btnName)
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
+        elif btnName == "btn_ram":
+            widgets.stackedWidget.setCurrentWidget(widgets.ram_page)
+            UIFunctions.resetStyle(self, btnName)
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
 
     def resizeEvent(self, event):
         UIFunctions.resize_grips(self)
@@ -908,8 +914,645 @@ class MainWindow(QMainWindow):
     def mousePressEvent(self, event):
         self.dragPos = event.globalPos()
 
+    def add_optimization_buttons(self):
+        """Add optimization features buttons to the sidebar menu"""
+        # Create and set up startup items manager button
+        self.ui.btn_startup = QPushButton("Startup Manager", self.ui.topMenu)
+        self.ui.btn_startup.setObjectName(u"btn_startup")
+        self.ui.btn_startup.setMinimumSize(QSize(0, 45))
+        self.ui.btn_startup.setCursor(Qt.PointingHandCursor)
+        self.ui.btn_startup.setStyleSheet("""
+            QPushButton {
+                background-image: url(:/icons/images/icons/cil-speedometer.png);
+                border-left: 22px solid transparent;
+                background-position: left center;
+                background-repeat: no-repeat;
+                text-align: left;
+                padding-left: 44px;
+            }
+        """)
+        
+        # Create and set up registry cleaner button
+        self.ui.btn_registry = QPushButton("Registry Cleaner", self.ui.topMenu)
+        self.ui.btn_registry.setObjectName(u"btn_registry")
+        self.ui.btn_registry.setMinimumSize(QSize(0, 45))
+        self.ui.btn_registry.setCursor(Qt.PointingHandCursor)
+        self.ui.btn_registry.setStyleSheet("""
+            QPushButton {
+                background-image: url(:/icons/images/icons/cil-settings.png);
+                border-left: 22px solid transparent;
+                background-position: left center;
+                background-repeat: no-repeat;
+                text-align: left;
+                padding-left: 44px;
+            }
+        """)
+        
+        # Create and set up RAM booster button
+        self.ui.btn_ram = QPushButton("RAM Optimizer", self.ui.topMenu)
+        self.ui.btn_ram.setObjectName(u"btn_ram")
+        self.ui.btn_ram.setMinimumSize(QSize(0, 45))
+        self.ui.btn_ram.setCursor(Qt.PointingHandCursor)
+        self.ui.btn_ram.setStyleSheet("""
+            QPushButton {
+                background-image: url(:/icons/images/icons/cil-reload.png);
+                border-left: 22px solid transparent;
+                background-position: left center;
+                background-repeat: no-repeat;
+                text-align: left;
+                padding-left: 44px;
+            }
+        """)
+        
+        # Add buttons to the top menu layout
+        self.ui.verticalLayout_8.addWidget(self.ui.btn_startup)
+        self.ui.verticalLayout_8.addWidget(self.ui.btn_registry)
+        self.ui.verticalLayout_8.addWidget(self.ui.btn_ram)
+
+    def setup_startup_page(self):
+        """Create the Startup Manager page"""
+        # Create the page
+        self.ui.startup_page = QWidget()
+        self.ui.startup_page.setObjectName("startup_page")
+        self.ui.stackedWidget.addWidget(self.ui.startup_page)
+        
+        # Create layout
+        layout = QVBoxLayout(self.ui.startup_page)
+        layout.setContentsMargins(10, 10, 10, 10)
+        
+        # Add header
+        header = QLabel("Startup Programs Manager")
+        header.setStyleSheet("font-size: 18px; color: white; font-weight: bold;")
+        layout.addWidget(header)
+        
+        description = QLabel("Manage programs that start automatically with Windows. Disabling unnecessary startup items can improve boot time.")
+        description.setStyleSheet("color: #aaaaaa; margin-bottom: 15px;")
+        description.setWordWrap(True)
+        layout.addWidget(description)
+        
+        # Create startup items table
+        self.startup_table = QTableWidget()
+        self.startup_table.setColumnCount(3)
+        self.startup_table.setHorizontalHeaderLabels(["Program Name", "Command", "Status"])
+        self.startup_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.startup_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.startup_table.setStyleSheet("""
+            QTableWidget {
+                background-color: #2c313c;
+                color: white;
+                border: none;
+                gridline-color: #353b48;
+            }
+            QHeaderView::section {
+                background-color: #1f232a;
+                color: white;
+                padding: 5px;
+                border: none;
+            }
+            QTableWidget::item {
+                padding: 5px;
+            }
+        """)
+        layout.addWidget(self.startup_table)
+        
+        # Button container
+        button_container = QHBoxLayout()
+        
+        # Refresh button
+        refresh_btn = QPushButton("Refresh List")
+        refresh_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2c313c;
+                color: white;
+                border-radius: 5px;
+                padding: 8px 15px;
+            }
+            QPushButton:hover {
+                background-color: #3c4454;
+            }
+        """)
+        refresh_btn.clicked.connect(self.refresh_startup_items)
+        button_container.addWidget(refresh_btn)
+        
+        # Disable selected button
+        disable_btn = QPushButton("Disable Selected")
+        disable_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #05B8CC;
+                color: white;
+                border-radius: 5px;
+                padding: 8px 15px;
+            }
+            QPushButton:hover {
+                background-color: #04a6b8;
+            }
+        """)
+        disable_btn.clicked.connect(self.disable_selected_startup)
+        button_container.addWidget(disable_btn)
+        
+        layout.addLayout(button_container)
+        
+        # Initialize startup manager
+        self.startup_manager = startup_manager.StartupManager()
+        
+        # Load startup items
+        self.refresh_startup_items()
+    
+    def refresh_startup_items(self):
+        """Refresh the list of startup items"""
+        self.startup_table.setRowCount(0)
+        
+        try:
+            startup_items = self.startup_manager.get_startup_apps()
+            
+            self.startup_table.setRowCount(len(startup_items))
+            for i, item in enumerate(startup_items):
+                self.startup_table.setItem(i, 0, QTableWidgetItem(item['name']))
+                self.startup_table.setItem(i, 1, QTableWidgetItem(item['command']))
+                
+                status_item = QTableWidgetItem("Enabled")
+                status_item.setForeground(Qt.green)
+                self.startup_table.setItem(i, 2, status_item)
+                
+                # Store the registry info for later disabling
+                item_widget = self.startup_table.item(i, 0)
+                item_widget.setData(Qt.UserRole, item)
+                
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"Failed to load startup items: {str(e)}")
+    
+    def disable_selected_startup(self):
+        """Disable selected startup items"""
+        selected_rows = self.startup_table.selectedItems()
+        if not selected_rows:
+            QMessageBox.information(self, "Information", "Please select a startup item to disable.")
+            return
+        
+        row = selected_rows[0].row()
+        app_info = self.startup_table.item(row, 0).data(Qt.UserRole)
+        
+        try:
+            success = self.startup_manager.disable_startup_app(app_info)
+            if success:
+                self.startup_table.item(row, 2).setText("Disabled")
+                self.startup_table.item(row, 2).setForeground(Qt.red)
+                QMessageBox.information(self, "Success", f"Startup item '{app_info['name']}' has been disabled.")
+            else:
+                QMessageBox.warning(self, "Error", f"Failed to disable startup item '{app_info['name']}'.")
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"Error disabling startup item: {str(e)}")
+
+    def setup_registry_page(self):
+        """Create the Registry Cleaner page"""
+        # Create the page
+        self.ui.registry_page = QWidget()
+        self.ui.registry_page.setObjectName("registry_page")
+        self.ui.stackedWidget.addWidget(self.ui.registry_page)
+        
+        # Create layout
+        layout = QVBoxLayout(self.ui.registry_page)
+        layout.setContentsMargins(10, 10, 10, 10)
+        
+        # Add header
+        header = QLabel("Registry Cleaner")
+        header.setStyleSheet("font-size: 18px; color: white; font-weight: bold;")
+        layout.addWidget(header)
+        
+        description = QLabel("Clean the Windows Registry by removing invalid entries. This can improve system stability and performance.")
+        description.setStyleSheet("color: #aaaaaa; margin-bottom: 15px;")
+        description.setWordWrap(True)
+        layout.addWidget(description)
+        
+        warning = QLabel("⚠️ WARNING: Modifying the registry can potentially cause system instability. We recommend creating a system restore point before proceeding.")
+        warning.setStyleSheet("color: #FFA500; margin-bottom: 15px;")
+        warning.setWordWrap(True)
+        layout.addWidget(warning)
+        
+        # Registry items list
+        self.registry_list = QListWidget()
+        self.registry_list.setStyleSheet("""
+            QListWidget {
+                background-color: #2c313c;
+                color: white;
+                border: none;
+                padding: 5px;
+            }
+            QListWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #353b48;
+            }
+            QListWidget::item:selected {
+                background-color: #3c4454;
+            }
+        """)
+        layout.addWidget(self.registry_list)
+        
+        # Category checkboxes
+        category_frame = QFrame()
+        category_frame.setStyleSheet("background-color: #2c313c; border-radius: 5px; padding: 10px;")
+        category_layout = QHBoxLayout(category_frame)
+        
+        self.check_file_exts = QCheckBox("File Extensions")
+        self.check_file_exts.setChecked(True)
+        self.check_file_exts.setStyleSheet("color: white;")
+        category_layout.addWidget(self.check_file_exts)
+        
+        self.check_shared_dlls = QCheckBox("Shared DLLs")
+        self.check_shared_dlls.setChecked(True)
+        self.check_shared_dlls.setStyleSheet("color: white;")
+        category_layout.addWidget(self.check_shared_dlls)
+        
+        self.check_uninstall = QCheckBox("Uninstall Entries")
+        self.check_uninstall.setChecked(True)
+        self.check_uninstall.setStyleSheet("color: white;")
+        category_layout.addWidget(self.check_uninstall)
+        
+        self.check_mui = QCheckBox("MUI Cache")
+        self.check_mui.setChecked(True)
+        self.check_mui.setStyleSheet("color: white;")
+        category_layout.addWidget(self.check_mui)
+        
+        layout.addWidget(category_frame)
+        
+        # Button container
+        button_container = QHBoxLayout()
+        
+        # Scan button
+        scan_btn = QPushButton("Scan Registry")
+        scan_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2c313c;
+                color: white;
+                border-radius: 5px;
+                padding: 8px 15px;
+            }
+            QPushButton:hover {
+                background-color: #3c4454;
+            }
+        """)
+        scan_btn.clicked.connect(self.scan_registry)
+        button_container.addWidget(scan_btn)
+        
+        # Fix selected button
+        fix_btn = QPushButton("Fix Selected Issues")
+        fix_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #05B8CC;
+                color: white;
+                border-radius: 5px;
+                padding: 8px 15px;
+            }
+            QPushButton:hover {
+                background-color: #04a6b8;
+            }
+        """)
+        fix_btn.clicked.connect(self.fix_registry_issues)
+        button_container.addWidget(fix_btn)
+        
+        layout.addLayout(button_container)
+        
+        # Initialize registry cleaner
+        self.registry_cleaner = registery_cleaner.RegistryCleaner()
+        
+        # Progress indicator label
+        self.registry_status = QLabel("Ready to scan. Click 'Scan Registry' to begin.")
+        self.registry_status.setStyleSheet("color: white; margin-top: 5px;")
+        layout.addWidget(self.registry_status)
+    
+    def scan_registry(self):
+        """Scan Windows registry for issues"""
+        self.registry_list.clear()
+        self.registry_status.setText("Scanning registry, please wait...")
+        QApplication.processEvents()  # Update UI
+        
+        try:
+            # Run the scanner in a thread to avoid freezing UI
+            threading.Thread(target=self._do_registry_scan).start()
+        except Exception as e:
+            self.registry_status.setText(f"Error: {str(e)}")
+    
+    def _do_registry_scan(self):
+        """Perform the actual registry scan in a separate thread"""
+        try:
+            # Scan registry
+            issues = self.registry_cleaner.scan_for_issues()
+            
+            # Update UI from main thread
+            def update_ui():
+                self.registry_list.clear()
+                if issues:
+                    for issue in issues:
+                        item = QListWidgetItem(issue['description'])
+                        item.setData(Qt.UserRole, issue)
+                        self.registry_list.addItem(item)
+                    self.registry_status.setText(f"Scan complete. Found {len(issues)} issues.")
+                else:
+                    self.registry_status.setText("Scan complete. No issues found.")
+            
+            # Schedule UI update
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, update_ui)
+        except Exception as e:
+            def show_error():
+                self.registry_status.setText(f"Error scanning registry: {str(e)}")
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, show_error)
+    
+    def fix_registry_issues(self):
+        """Fix selected registry issues"""
+        selected_items = self.registry_list.selectedItems()
+        if not selected_items:
+            QMessageBox.information(self, "Information", "Please select issues to fix.")
+            return
+        
+        # Confirm action
+        confirm = QMessageBox.question(
+            self, "Confirm Fix", 
+            "Are you sure you want to fix the selected registry issues? This action cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if confirm == QMessageBox.Yes:
+            # Get selected issue indexes
+            issues_to_fix = []
+            for item in selected_items:
+                issue = item.data(Qt.UserRole)
+                idx = self.registry_cleaner.registry_issues.index(issue)
+                issues_to_fix.append(idx)
+            
+            try:
+                # Fix issues
+                fixed_count = self.registry_cleaner.fix_issues(issues_to_fix)
+                
+                # Remove fixed items from list
+                for item in selected_items:
+                    row = self.registry_list.row(item)
+                    self.registry_list.takeItem(row)
+                
+                QMessageBox.information(self, "Success", f"{fixed_count} registry issues have been fixed.")
+                self.registry_status.setText(f"Fixed {fixed_count} issues.")
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Failed to fix registry issues: {str(e)}")
+
+    def setup_ram_page(self):
+        """Create the RAM Optimizer page"""
+        # Create the page
+        self.ui.ram_page = QWidget()
+        self.ui.ram_page.setObjectName("ram_page")
+        self.ui.stackedWidget.addWidget(self.ui.ram_page)
+        
+        # Create layout
+        layout = QVBoxLayout(self.ui.ram_page)
+        layout.setContentsMargins(10, 10, 10, 10)
+        
+        # Add header
+        header = QLabel("RAM Optimizer")
+        header.setStyleSheet("font-size: 18px; color: white; font-weight: bold;")
+        layout.addWidget(header)
+        
+        description = QLabel("Optimize your system memory to improve performance and reduce resource usage.")
+        description.setStyleSheet("color: #aaaaaa; margin-bottom: 15px;")
+        description.setWordWrap(True)
+        layout.addWidget(description)
+        
+        # Memory usage frame
+        memory_frame = QFrame()
+        memory_frame.setStyleSheet("background-color: #2c313c; border-radius: 5px; padding: 10px;")
+        memory_layout = QVBoxLayout(memory_frame)
+        
+        mem_title = QLabel("Current Memory Usage")
+        mem_title.setStyleSheet("color: white; font-weight: bold;")
+        memory_layout.addWidget(mem_title)
+        
+        # Create memory usage display
+        usage_layout = QHBoxLayout()
+        
+        # Memory usage progress bar
+        self.memory_bar = QProgressBar()
+        self.memory_bar.setRange(0, 100)
+        self.memory_bar.setValue(50)  # Placeholder value
+        self.memory_bar.setTextVisible(True)
+        self.memory_bar.setFormat("%p% used")
+        self.memory_bar.setStyleSheet("""
+            QProgressBar {
+                background-color: #353b48;
+                color: white;
+                border-radius: 3px;
+                text-align: center;
+                height: 20px;
+            }
+            QProgressBar::chunk {
+                background-color: #05B8CC;
+                border-radius: 3px;
+            }
+        """)
+        usage_layout.addWidget(self.memory_bar, 3)
+        
+        # Memory details
+        self.memory_details = QLabel("Total: 0 GB | Used: 0 GB | Free: 0 GB")
+        self.memory_details.setStyleSheet("color: white;")
+        usage_layout.addWidget(self.memory_details, 2)
+        
+        memory_layout.addLayout(usage_layout)
+        layout.addWidget(memory_frame)
+        
+        # Optimization options
+        options_frame = QFrame()
+        options_frame.setStyleSheet("background-color: #2c313c; border-radius: 5px; padding: 10px;")
+        options_layout = QVBoxLayout(options_frame)
+        
+        opt_title = QLabel("Optimization Options")
+        opt_title.setStyleSheet("color: white; font-weight: bold;")
+        options_layout.addWidget(opt_title)
+        
+        # Option checkboxes
+        self.check_terminate = QCheckBox("Terminate low-priority processes")
+        self.check_terminate.setChecked(True)
+        self.check_terminate.setStyleSheet("color: white;")
+        options_layout.addWidget(self.check_terminate)
+        
+        self.check_file_cache = QCheckBox("Clear system file cache")
+        self.check_file_cache.setChecked(True)
+        self.check_file_cache.setStyleSheet("color: white;")
+        options_layout.addWidget(self.check_file_cache)
+        
+        self.check_standby = QCheckBox("Clear system standby list")
+        self.check_standby.setChecked(True)
+        self.check_standby.setStyleSheet("color: white;")
+        options_layout.addWidget(self.check_standby)
+        
+        layout.addWidget(options_frame)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        
+        # Refresh button
+        refresh_btn = QPushButton("Refresh Status")
+        refresh_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #2c313c;
+                color: white;
+                border-radius: 5px;
+                padding: 8px 15px;
+            }
+            QPushButton:hover {
+                background-color: #3c4454;
+            }
+        """)
+        refresh_btn.clicked.connect(self.refresh_memory_status)
+        button_layout.addWidget(refresh_btn)
+        
+        # Optimize button
+        optimize_btn = QPushButton("Optimize RAM")
+        optimize_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #05B8CC;
+                color: white;
+                border-radius: 5px;
+                padding: 8px 15px;
+            }
+            QPushButton:hover {
+                background-color: #04a6b8;
+            }
+        """)
+        optimize_btn.clicked.connect(self.optimize_ram)
+        button_layout.addWidget(optimize_btn)
+        
+        layout.addLayout(button_layout)
+        
+        # Status label
+        self.ram_status = QLabel("Ready to optimize. Click 'Refresh Status' to see current memory usage.")
+        self.ram_status.setStyleSheet("color: white; margin-top: 5px;")
+        layout.addWidget(self.ram_status)
+        
+        # Initialize RAM optimizer
+        self.ram_booster = ram_booster.RamBooster()
+        
+        # Refresh memory status initially
+        self.refresh_memory_status()
+    
+    def refresh_memory_status(self):
+        """Refresh memory usage statistics"""
+        try:
+            # Get memory info from psutil
+            memory = psutil.virtual_memory()
+            
+            # Update progress bar
+            self.memory_bar.setValue(memory.percent)
+            
+            # Update memory details
+            total_gb = round(memory.total / (1024 ** 3), 2)
+            used_gb = round(memory.used / (1024 ** 3), 2)
+            free_gb = round(memory.available / (1024 ** 3), 2)
+            
+            self.memory_details.setText(f"Total: {total_gb} GB | Used: {used_gb} GB | Free: {free_gb} GB")
+            self.ram_status.setText("Memory status updated.")
+            
+            # Set progress bar color based on usage
+            if memory.percent > 80:
+                self.memory_bar.setStyleSheet("""
+                    QProgressBar {
+                        background-color: #353b48;
+                        color: white;
+                        border-radius: 3px;
+                        text-align: center;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #e74c3c;
+                        border-radius: 3px;
+                    }
+                """)
+            elif memory.percent > 60:
+                self.memory_bar.setStyleSheet("""
+                    QProgressBar {
+                        background-color: #353b48;
+                        color: white;
+                        border-radius: 3px;
+                        text-align: center;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #f39c12;
+                        border-radius: 3px;
+                    }
+                """)
+            else:
+                self.memory_bar.setStyleSheet("""
+                    QProgressBar {
+                        background-color: #353b48;
+                        color: white;
+                        border-radius: 3px;
+                        text-align: center;
+                    }
+                    QProgressBar::chunk {
+                        background-color: #05B8CC;
+                        border-radius: 3px;
+                    }
+                """)
+        except Exception as e:
+            self.ram_status.setText(f"Error refreshing memory status: {str(e)}")
+    
+    def optimize_ram(self):
+        """Optimize RAM based on selected options"""
+        self.ram_status.setText("Optimizing RAM, please wait...")
+        QApplication.processEvents()  # Update UI
+        
+        # Start optimization in a thread to prevent UI freezing
+        threading.Thread(target=self._do_ram_optimization).start()
+    
+    def _do_ram_optimization(self):
+        """Perform RAM optimization in a separate thread"""
+        try:
+            # Get selected options
+            terminate = self.check_terminate.isChecked()
+            clear_cache = self.check_file_cache.isChecked()
+            clear_standby = self.check_standby.isChecked()
+            
+            # Track optimization results
+            optimized = False
+            results = []
+            
+            # Perform selected optimizations
+            if terminate:
+                killed = self.ram_booster.terminate_low_priority_processes()
+                if killed > 0:
+                    results.append(f"Terminated {killed} low-priority processes")
+                    optimized = True
+            
+            if clear_cache:
+                if self.ram_booster.clear_system_file_cache():
+                    results.append("Cleared system file cache")
+                    optimized = True
+            
+            if clear_standby:
+                if self.ram_booster.clear_standby_list():
+                    results.append("Cleared system standby list")
+                    optimized = True
+            
+            # Show results in the UI
+            def update_ui():
+                if optimized:
+                    self.ram_status.setText("Optimization complete: " + ", ".join(results))
+                    QMessageBox.information(self, "Optimization Complete", 
+                                          "RAM optimization completed successfully.\n\n" + "\n".join(results))
+                else:
+                    self.ram_status.setText("No optimizations were performed.")
+                
+                # Refresh memory status to show the effects
+                self.refresh_memory_status()
+            
+            # Update UI from main thread
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, update_ui)
+            
+        except Exception as e:
+            def show_error():
+                self.ram_status.setText(f"Error during optimization: {str(e)}")
+                QMessageBox.warning(self, "Optimization Error", f"An error occurred during RAM optimization:\n{str(e)}")
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, show_error)
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("icon.ico"))
     window = MainWindow()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
