@@ -31,7 +31,7 @@ class LoginDialog(QDialog):
         self.setFixedSize(400, 200)
         self.setStyleSheet("""
             QDialog {
-                background-color: #1b1e23;
+                background-color: #131621;
                 border: 2px solid #2c313c;
                 border-radius: 10px;
             }
@@ -44,10 +44,10 @@ class LoginDialog(QDialog):
                 color: white;
                 border-radius: 5px;
                 padding: 8px;
-                border: 1px solid #05B8CC;
+                border: 1px solid #2635a5;
             }
             QPushButton {
-                background-color: #05B8CC;
+                background-color: #2635a5;
                 color: white;
                 border-radius: 5px;
                 padding: 8px;
@@ -150,7 +150,7 @@ class LicenseDialog(QDialog):
         self.parent = parent
         self.setStyleSheet("""
             QDialog {
-                background-color: #1b1e23;
+                background-color: #131621;
                 border: 2px solid #2c313c;
                 border-radius: 10px;
             }
@@ -163,10 +163,10 @@ class LicenseDialog(QDialog):
                 color: white;
                 border-radius: 5px;
                 padding: 8px;
-                border: 1px solid #05B8CC;
+                border: 1px solid #2635a5;
             }
             QPushButton {
-                background-color: #05B8CC;
+                background-color: #2635a5;
                 color: white;
                 border-radius: 5px;
                 padding: 8px;
@@ -332,7 +332,34 @@ class MainWindow(QMainWindow):
         # SET CUSTOM THEME
         # ///////////////////////////////////////////////////////////////
         useCustomTheme = True
-        themeFile = "themes/py_dracula_dark.qss"
+        
+        # Get the base path for resources when running as executable
+        if getattr(sys, 'frozen', False):
+            # Running as compiled executable
+            base_path = sys._MEIPASS
+        else:
+            # Running as script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            
+        themeFile = os.path.join(base_path, "themes", "py_dracula_dark.qss")
+        
+        # Check if theme file exists
+        if not os.path.isfile(themeFile):
+            print(f"Theme file not found: {themeFile}")
+            # Fallback to a basic style if theme file is not found
+            self.setStyleSheet("""
+                QMainWindow, QDialog {
+                    background-color: #1b1e23;
+                    color: white;
+                }
+                QPushButton {
+                    background-color: #2c313c;
+                    color: white;
+                    border-radius: 5px;
+                    padding: 5px 10px;
+                }
+            """)
+            useCustomTheme = False
 
         # SET THEME AND HACKS
         if useCustomTheme:
@@ -444,7 +471,7 @@ class MainWindow(QMainWindow):
             # Get username from file or registry
             username = self.get_username()
             self.login_label.setText(f"Logged in as: {username}")
-            self.login_label.setStyleSheet("color: #05B8CC; font-weight: bold;")
+            self.login_label.setStyleSheet("color: #2635a5; font-weight: bold;")
             self.logout_btn.setVisible(True)
         else:
             self.login_label.setText("Click to Login")
@@ -541,7 +568,7 @@ class MainWindow(QMainWindow):
         """Update the license status display"""
         if self.license_status:
             self.license_label.setText("Licensed ✓")
-            self.license_label.setStyleSheet("color: #05B8CC; font-weight: bold;")
+            self.license_label.setStyleSheet("color: #2635a5; font-weight: bold;")
         else:
             self.license_label.setText("Click to Activate License")
             self.license_label.setStyleSheet("color: #F44336; font-weight: bold;")
@@ -583,7 +610,7 @@ class MainWindow(QMainWindow):
         scan_widget.setObjectName("scanWidget")
         scan_widget.setStyleSheet("""
             #scanWidget { 
-                background-color: #1b1e23; 
+                background-color: #131621; 
                 border-radius: 8px; 
                 border: 2px solid #2c313c;
             }
@@ -600,7 +627,7 @@ class MainWindow(QMainWindow):
 
         # Scan type buttons
         scan_type_frame = QFrame()
-        scan_type_frame.setStyleSheet("background-color: #1b1e23; border: none;")
+        scan_type_frame.setStyleSheet("background-color: #131621; border: none;")
         scan_type_layout = QHBoxLayout(scan_type_frame)
         scan_type_layout.setContentsMargins(0, 10, 0, 10)
         
@@ -617,7 +644,7 @@ class MainWindow(QMainWindow):
                 background-color: #3c4454;
             }
             QPushButton:pressed {
-                background-color: #05B8CC;
+                background-color: #2635a5;
             }
         """)
         
@@ -634,7 +661,7 @@ class MainWindow(QMainWindow):
                 background-color: #3c4454;
             }
             QPushButton:pressed {
-                background-color: #05B8CC;
+                background-color: #2635a5;
             }
         """)
         
@@ -690,13 +717,13 @@ class MainWindow(QMainWindow):
                     height: 15px;
                 }
                 QCheckBox::indicator:unchecked {
-                    background-color: #1b1e23;
-                    border: 1px solid #05B8CC;
+                    background-color: #131621;
+                    border: 1px solid #2635a5;
                     border-radius: 3px;
                 }
                 QCheckBox::indicator:checked {
-                    background-color: #05B8CC;
-                    border: 1px solid #05B8CC;
+                    background-color: #576EFC;
+                    border: 1px solid #576EFC;
                     border-radius: 3px;
                 }
             """)
@@ -718,11 +745,11 @@ class MainWindow(QMainWindow):
                 border: 2px solid #2c313c;
                 border-radius: 5px;
                 text-align: center;
-                background-color: #1b1e23;
+                background-color: #131621;
                 color: white;
             }
             QProgressBar::chunk {
-                background-color: #05B8CC;
+                background-color: #2635a5;
                 border-radius: 4px;
             }
         """)
@@ -752,7 +779,7 @@ class MainWindow(QMainWindow):
                 margin: 8px 0 8px 0;
             }
             QScrollBar::handle:vertical {
-                background: #05B8CC;
+                background: #2635a5;
                 min-height: 20px;
                 border-radius: 4px;
             }
@@ -764,14 +791,14 @@ class MainWindow(QMainWindow):
         self.scan_button.setMinimumHeight(50)
         self.scan_button.setStyleSheet("""
             QPushButton {
-                background-color: #05B8CC;
+                background-color: #586DFB;
                 color: white;
                 border-radius: 10px;
                 font-weight: bold;
                 font-size: 14px;
             }
             QPushButton:hover {
-                background-color: #04a6b8;
+                background-color: #2635a5;
             }
             QPushButton:pressed {
                 background-color: #038a98;
@@ -794,7 +821,7 @@ class MainWindow(QMainWindow):
         if mode == "full":
             self.full_scan_btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #05B8CC;
+                    background-color: #2635a5;
                     color: white;
                     border-radius: 8px;
                     font-weight: bold;
@@ -813,7 +840,7 @@ class MainWindow(QMainWindow):
                     background-color: #3c4454;
                 }
                 QPushButton:pressed {
-                    background-color: #05B8CC;
+                    background-color: #2635a5;
                 }
             """)
             for checkbox in self.checkboxes:
@@ -822,7 +849,7 @@ class MainWindow(QMainWindow):
         else:
             self.custom_scan_btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #05B8CC;
+                    background-color: #2635a5;
                     color: white;
                     border-radius: 8px;
                     font-weight: bold;
@@ -841,7 +868,7 @@ class MainWindow(QMainWindow):
                     background-color: #3c4454;
                 }
                 QPushButton:pressed {
-                    background-color: #05B8CC;
+                    background-color: #2635a5;
                 }
             """)
             for checkbox in self.checkboxes:
@@ -1038,13 +1065,13 @@ class MainWindow(QMainWindow):
         disable_btn = QPushButton("Disable Selected")
         disable_btn.setStyleSheet("""
             QPushButton {
-                background-color: #05B8CC;
+                background-color: #586DFB;
                 color: white;
                 border-radius: 5px;
                 padding: 8px 15px;
             }
             QPushButton:hover {
-                background-color: #04a6b8;
+                background-color: #2635a5;
             }
         """)
         disable_btn.clicked.connect(self.disable_selected_startup)
@@ -1197,13 +1224,13 @@ class MainWindow(QMainWindow):
         fix_btn = QPushButton("Fix Selected Issues")
         fix_btn.setStyleSheet("""
             QPushButton {
-                background-color: #05B8CC;
+                background-color: #586DFB;
                 color: white;
                 border-radius: 5px;
                 padding: 8px 15px;
             }
             QPushButton:hover {
-                background-color: #04a6b8;
+                background-color: #2635a5;
             }
         """)
         fix_btn.clicked.connect(self.fix_registry_issues)
@@ -1342,7 +1369,7 @@ class MainWindow(QMainWindow):
                 height: 20px;
             }
             QProgressBar::chunk {
-                background-color: #05B8CC;
+                background-color: #2635a5;
                 border-radius: 3px;
             }
         """)
@@ -1406,13 +1433,13 @@ class MainWindow(QMainWindow):
         optimize_btn = QPushButton("Optimize RAM")
         optimize_btn.setStyleSheet("""
             QPushButton {
-                background-color: #05B8CC;
+                background-color: #586DFB;
                 color: white;
                 border-radius: 5px;
                 padding: 8px 15px;
             }
             QPushButton:hover {
-                background-color: #04a6b8;
+                background-color: #2635a5;
             }
         """)
         optimize_btn.clicked.connect(self.optimize_ram)
@@ -1484,7 +1511,7 @@ class MainWindow(QMainWindow):
                         text-align: center;
                     }
                     QProgressBar::chunk {
-                        background-color: #05B8CC;
+                        background-color: #2635a5;
                         border-radius: 3px;
                     }
                 """)
