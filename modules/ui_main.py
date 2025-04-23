@@ -710,6 +710,18 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_8.addWidget(self.btn_exit)
 
+        # Add Antivirus button
+        self.btn_antivirus = QPushButton(self.topMenu)
+        self.btn_antivirus.setObjectName(u"btn_antivirus")
+        sizePolicy.setHeightForWidth(self.btn_antivirus.sizePolicy().hasHeightForWidth())
+        self.btn_antivirus.setSizePolicy(sizePolicy)
+        self.btn_antivirus.setMinimumSize(QSize(0, 45))
+        self.btn_antivirus.setFont(font)
+        self.btn_antivirus.setCursor(QCursor(Qt.PointingHandCursor))
+        self.btn_antivirus.setLayoutDirection(Qt.LeftToRight)
+        self.btn_antivirus.setStyleSheet(u"background-image: url(:/icons/images/icons/cil-task.png);")
+        self.verticalLayout_8.addWidget(self.btn_antivirus)
+
 
         self.verticalMenuLayout.addWidget(self.topMenu, 0, Qt.AlignTop)
 
@@ -1387,6 +1399,80 @@ class Ui_MainWindow(object):
 
         self.stackedWidget.addWidget(self.new_page)
 
+        # Add Antivirus page
+        self.antivirusPage = QWidget()
+        self.antivirusPage.setObjectName(u"antivirusPage")
+        self.verticalLayout_antivirus = QVBoxLayout(self.antivirusPage)
+        self.verticalLayout_antivirus.setObjectName(u"verticalLayout_antivirus")
+        
+        # Scan controls
+        self.horizontalLayout_scan = QHBoxLayout()
+        self.scan_path = QLineEdit(self.antivirusPage)
+        self.scan_path.setPlaceholderText("Select folder to scan")
+        self.scan_path.setMinimumSize(QSize(0, 30))
+        self.scan_path.setStyleSheet(u"background-color: rgb(33, 37, 43);")
+        self.horizontalLayout_scan.addWidget(self.scan_path)
+        
+        self.btn_browse = QPushButton(self.antivirusPage)
+        self.btn_browse.setText("Browse")
+        self.btn_browse.setMinimumSize(QSize(100, 30))
+        self.btn_browse.setCursor(QCursor(Qt.PointingHandCursor))
+        self.btn_browse.setStyleSheet(u"background-color: rgb(52, 59, 72);")
+        self.horizontalLayout_scan.addWidget(self.btn_browse)
+        
+        self.btn_start_scan = QPushButton(self.antivirusPage)
+        self.btn_start_scan.setText("Start Scan")
+        self.btn_start_scan.setMinimumSize(QSize(100, 30))
+        self.btn_start_scan.setCursor(QCursor(Qt.PointingHandCursor))
+        self.btn_start_scan.setStyleSheet(u"background-color: rgb(52, 59, 72);")
+        self.horizontalLayout_scan.addWidget(self.btn_start_scan)
+        
+        self.verticalLayout_antivirus.addLayout(self.horizontalLayout_scan)
+        
+        # Progress bar and status
+        self.scan_progress = QProgressBar(self.antivirusPage)
+        self.scan_progress.setStyleSheet(u"QProgressBar {\n"
+            "	background-color: rgb(98, 114, 164);\n"
+            "	color: rgb(200, 200, 200);\n"
+            "	border-style: none;\n"
+            "	border-radius: 10px;\n"
+            "	text-align: center;\n"
+            "}\n"
+            "QProgressBar::chunk{\n"
+            "	background-color: rgb(189, 147, 249);\n"
+            "	border-radius: 10px;\n"
+            "}")
+        self.scan_progress.setValue(0)
+        self.verticalLayout_antivirus.addWidget(self.scan_progress)
+        
+        self.scan_status = QLabel(self.antivirusPage)
+        self.scan_status.setText("Ready to scan")
+        self.scan_status.setAlignment(Qt.AlignCenter)
+        self.verticalLayout_antivirus.addWidget(self.scan_status)
+        
+        # Results table
+        self.results_table = QTableWidget(self.antivirusPage)
+        self.results_table.setObjectName(u"results_table")
+        self.results_table.setStyleSheet(u"QTableWidget {	\n"
+            "	background-color: transparent;\n"
+            "	padding: 10px;\n"
+            "	border-radius: 5px;\n"
+            "	gridline-color: rgb(44, 49, 58);\n"
+            "	border-bottom: 1px solid rgb(44, 49, 60);\n"
+            "}\n"
+            "QTableWidget::item{\n"
+            "	border-color: rgb(44, 49, 60);\n"
+            "	padding-left: 5px;\n"
+            "	padding-right: 5px;\n"
+            "	gridline-color: rgb(44, 49, 60);\n"
+            "}")
+        self.results_table.setColumnCount(4)
+        self.results_table.setHorizontalHeaderLabels(["File Path", "Status", "Message", "Timestamp"])
+        self.results_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.verticalLayout_antivirus.addWidget(self.results_table)
+        
+        self.stackedWidget.addWidget(self.antivirusPage)
+
         self.verticalLayout_15.addWidget(self.stackedWidget)
 
 
@@ -1655,3 +1741,4 @@ class Ui_MainWindow(object):
         self.btn_logout.setText(QCoreApplication.translate("MainWindow", u"Logout", None))
         self.creditsLabel.setText(QCoreApplication.translate("MainWindow", u"By: Wanderson M. Pimenta", None))
         self.version.setText(QCoreApplication.translate("MainWindow", u"v1.0.3", None))
+        self.btn_antivirus.setText(QCoreApplication.translate("MainWindow", u"Antivirus", None))

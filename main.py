@@ -9,7 +9,7 @@ import psutil
 from modules import *
 from widgets import *
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtWidgets import QProgressBar, QTextEdit, QVBoxLayout, QHBoxLayout, QWidget, QCheckBox, QLabel, QPushButton, QFrame, QDialog, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QListWidget, QListWidgetItem, QHeaderView
+from PySide6.QtWidgets import QProgressBar, QTextEdit, QVBoxLayout, QHBoxLayout, QWidget, QCheckBox, QLabel, QPushButton, QFrame, QDialog, QLineEdit, QMessageBox, QTableWidget, QTableWidgetItem, QListWidget, QListWidgetItem, QHeaderView, QFileDialog
 
 import TempCleaning as tc
 import Temp32Cleaning as tc32
@@ -20,6 +20,7 @@ import startup_manager
 import registery_cleaner
 import ram_booster
 import enhanced_cleaner
+from antivirus import AntiVirus
 
 os.environ["QT_FONT_DPI"] = "96"
 widgets = None
@@ -411,6 +412,13 @@ class MainWindow(QMainWindow):
         # Check if logged in, if not show login dialog
         if not self.session_active:
             self.open_login_dialog()
+            
+        self.antivirus = AntiVirus()
+        
+        # CONNECT ANTIVIRUS SIGNALS
+        self.ui.btn_antivirus.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.antivirusPage))
+        self.ui.btn_browse.clicked.connect(self.browse_folder)
+        self.ui.btn_start_scan.clicked.connect(self.toggle_scan)
             
     def check_license(self):
         """Check if license exists and is valid"""
@@ -1577,6 +1585,49 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Optimization Error", f"An error occurred during RAM optimization:\n{str(e)}")
             from PySide6.QtCore import QTimer
             QTimer.singleShot(0, show_error)
+
+    def browse_folder(self):
+        folder = QFileDialog.getExistingDirectory(self, "Select Directory to Scan")
+        if folder:
+            self.ui.scan_path.setText(folder)
+            
+    def toggle_scan(self):
+        if self.ui.btn_start_scan.text() == "Start Scan":
+            self.start_scan()
+        else:
+            self.stop_scan()
+            
+    def start_scan(self):
+        scan_path = self.ui.scan_path.text()
+        if not scan_path:
+            return
+            
+        self.ui.btn_start_scan.setText("Stop Scan")
+        self.ui.scan_progress.setValue(0)
+        self.ui.results_table.setRowCount(0)
+        
+        def update_progress(progress, current_file, files_scanned, total_files):
+            self.ui.scan_progress.setValue(int(progress))
+            self.ui.scan_status.setText(f"Scanning: {current_file}\nFiles scanned: {files_scanned}/{total_files}")
+            
+            # Update results table
+            results = self.antivirus.get_results()
+            if results and len(results) > self.ui.results_table.rowCount():
+                row = self.ui.results_table.rowCount()
+                self.ui.results_table.insertRow(row)
+                latest = results[-1]
+                
+                self.ui.results_table.setItem(row, 0, QTableWidgetItem(latest["filepath"]))
+                self.ui.results_table.setItem(row, 1, QTableWidgetItem(latest["status"]))
+                self.ui.results_table.setItem(row, 2, QTableWidgetItem(latest["message"]))
+                self.ui.results_table.setItem(row, 3, QTableWidgetItem(str(latest["timestamp"])))
+        
+        self.scan_thread = self.antivirus.start_scan(scan_path, update_progress)
+        
+    def stop_scan(self):
+        self.antivirus.stop_scan()
+        self.ui.btn_start_scan.setText("Start Scan")
+        self.ui.scan_status.setText("Scan stopped")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
