@@ -12,6 +12,15 @@ class AntiVirus:
         self.current_file = ""
         self.files_scanned = 0
         self.total_files = 0
+        self.common_paths = [
+            os.path.expanduser("~/Downloads"),
+            os.path.expanduser("~/Desktop"),
+            os.path.join(os.environ.get("SystemDrive", "C:"), "Users"),
+            os.path.join(os.environ.get("SystemDrive", "C:"), "Program Files"),
+            os.path.join(os.environ.get("SystemDrive", "C:"), "Program Files (x86)"),
+            os.path.join(os.environ.get("SystemDrive", "C:"), "Windows", "Temp"),
+            os.environ.get("TEMP", os.path.expanduser('~/AppData/Local/Temp'))
+        ]
         
     def load_virus_signatures(self):
         # In a real implementation, you would load from a maintained database
@@ -539,3 +548,73 @@ class AntiVirus:
     
     def get_results(self):
         return self.scan_results
+
+    def quick_scan(self, callback=None):
+        """Perform a quick scan of common virus locations"""
+        self.scan_results = []
+        self.is_scanning = True
+        self.files_scanned = 0
+        self.total_files = 0
+        
+        # Count total files first
+        for path in self.common_paths:
+            if os.path.exists(path):
+                for _, _, files in os.walk(path):
+                    self.total_files += len(files)
+        
+        # Scan each common path
+        for path in self.common_paths:
+            if not self.is_scanning:
+                break
+                
+            if os.path.exists(path):
+                for root, _, files in os.walk(path):
+                    if not self.is_scanning:
+                        break
+                        
+                    for file in files:
+                        if not self.is_scanning:
+                            break
+                            
+                        filepath = os.path.join(root, file)
+                        self.current_file = filepath
+                        is_virus, message = self.scan_file(filepath)
+                        
+                        if is_virus:
+                            result = {
+                                "filepath": filepath,
+                                "status": "Infected",
+                                "message": message,
+                                "timestamp": datetime.now()
+                            }
+                            self.scan_results.append(result)
+                        
+                        self.files_scanned += 1
+                        if callback:
+                            progress = (self.files_scanned / self.total_files) * 100
+                            callback(progress, filepath, self.files_scanned, self.total_files)
+    
+    def start_quick_scan(self, callback=None):
+        """Start a quick scan in a separate thread"""
+        self.load_virus_signatures()
+        scan_thread = threading.Thread(
+            target=self.quick_scan,
+            args=(callback,)
+        )
+        scan_thread.start()
+        return scan_thread
+        
+    def full_scan(self, callback=None):
+        """Perform a full system scan starting from root"""
+        system_drive = os.environ.get("SystemDrive", "C:")
+        self.scan_directory(system_drive, callback)
+        
+    def start_full_scan(self, callback=None):
+        """Start a full system scan in a separate thread"""
+        self.load_virus_signatures()
+        scan_thread = threading.Thread(
+            target=self.full_scan,
+            args=(callback,)
+        )
+        scan_thread.start()
+        return scan_thread

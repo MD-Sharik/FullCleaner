@@ -419,6 +419,13 @@ class MainWindow(QMainWindow):
         self.ui.btn_antivirus.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.antivirusPage))
         self.ui.btn_browse.clicked.connect(self.browse_folder)
         self.ui.btn_start_scan.clicked.connect(self.toggle_scan)
+        
+        # Connect scan type combo box change event
+        self.ui.scan_type_combo.currentTextChanged.connect(self.on_scan_type_changed)
+        
+        # Initially hide scan path components since Quick Scan is default
+        self.ui.scan_path.hide()
+        self.ui.btn_browse.hide()
             
     def check_license(self):
         """Check if license exists and is valid"""
@@ -1593,11 +1600,68 @@ class MainWindow(QMainWindow):
             
     def toggle_scan(self):
         if self.ui.btn_start_scan.text() == "Start Scan":
-            self.start_scan()
+            scan_type = self.ui.scan_type_combo.currentText()
+            if scan_type == "Quick Scan":
+                self.start_quick_scan()
+            elif scan_type == "Full Scan":
+                self.start_full_scan()
+            else:  # Custom Scan
+                if not self.ui.scan_path.text().strip():
+                    QMessageBox.warning(self, "Warning", "Please select a folder to scan")
+                    return
+                self.start_custom_scan()
         else:
             self.stop_scan()
+    
+    def start_quick_scan(self):
+        self.ui.btn_start_scan.setText("Stop Scan")
+        self.ui.scan_progress.setValue(0)
+        self.ui.results_table.setRowCount(0)
+        self.ui.scan_path.setEnabled(False)
+        self.ui.btn_browse.setEnabled(False)
+        
+        def update_progress(progress, current_file, files_scanned, total_files):
+            self.ui.scan_progress.setValue(int(progress))
+            self.ui.scan_status.setText(f"Scanning: {current_file}\nFiles scanned: {files_scanned}/{total_files}")
             
-    def start_scan(self):
+            results = self.antivirus.get_results()
+            if results and len(results) > self.ui.results_table.rowCount():
+                row = self.ui.results_table.rowCount()
+                self.ui.results_table.insertRow(row)
+                latest = results[-1]
+                
+                self.ui.results_table.setItem(row, 0, QTableWidgetItem(latest["filepath"]))
+                self.ui.results_table.setItem(row, 1, QTableWidgetItem(latest["status"]))
+                self.ui.results_table.setItem(row, 2, QTableWidgetItem(latest["message"]))
+                self.ui.results_table.setItem(row, 3, QTableWidgetItem(str(latest["timestamp"])))
+        
+        self.scan_thread = self.antivirus.start_quick_scan(update_progress)
+    
+    def start_full_scan(self):
+        self.ui.btn_start_scan.setText("Stop Scan")
+        self.ui.scan_progress.setValue(0)
+        self.ui.results_table.setRowCount(0)
+        self.ui.scan_path.setEnabled(False)
+        self.ui.btn_browse.setEnabled(False)
+        
+        def update_progress(progress, current_file, files_scanned, total_files):
+            self.ui.scan_progress.setValue(int(progress))
+            self.ui.scan_status.setText(f"Scanning: {current_file}\nFiles scanned: {files_scanned}/{total_files}")
+            
+            results = self.antivirus.get_results()
+            if results and len(results) > self.ui.results_table.rowCount():
+                row = self.ui.results_table.rowCount()
+                self.ui.results_table.insertRow(row)
+                latest = results[-1]
+                
+                self.ui.results_table.setItem(row, 0, QTableWidgetItem(latest["filepath"]))
+                self.ui.results_table.setItem(row, 1, QTableWidgetItem(latest["status"]))
+                self.ui.results_table.setItem(row, 2, QTableWidgetItem(latest["message"]))
+                self.ui.results_table.setItem(row, 3, QTableWidgetItem(str(latest["timestamp"])))
+        
+        self.scan_thread = self.antivirus.start_full_scan(update_progress)
+    
+    def start_custom_scan(self):
         scan_path = self.ui.scan_path.text()
         if not scan_path:
             return
@@ -1605,12 +1669,13 @@ class MainWindow(QMainWindow):
         self.ui.btn_start_scan.setText("Stop Scan")
         self.ui.scan_progress.setValue(0)
         self.ui.results_table.setRowCount(0)
+        self.ui.scan_path.setEnabled(False)
+        self.ui.btn_browse.setEnabled(False)
         
         def update_progress(progress, current_file, files_scanned, total_files):
             self.ui.scan_progress.setValue(int(progress))
             self.ui.scan_status.setText(f"Scanning: {current_file}\nFiles scanned: {files_scanned}/{total_files}")
             
-            # Update results table
             results = self.antivirus.get_results()
             if results and len(results) > self.ui.results_table.rowCount():
                 row = self.ui.results_table.rowCount()
@@ -1623,11 +1688,25 @@ class MainWindow(QMainWindow):
                 self.ui.results_table.setItem(row, 3, QTableWidgetItem(str(latest["timestamp"])))
         
         self.scan_thread = self.antivirus.start_scan(scan_path, update_progress)
-        
+            
     def stop_scan(self):
         self.antivirus.stop_scan()
         self.ui.btn_start_scan.setText("Start Scan")
         self.ui.scan_status.setText("Scan stopped")
+        self.ui.scan_path.setEnabled(True)
+        self.ui.btn_browse.setEnabled(True)
+
+    def on_scan_type_changed(self, scan_type):
+        """Handle scan type selection change"""
+        if scan_type == "Custom Scan":
+            self.ui.scan_path.show()
+            self.ui.btn_browse.show()
+            self.ui.scan_path.setEnabled(True)
+            self.ui.btn_browse.setEnabled(True)
+        else:
+            self.ui.scan_path.hide()
+            self.ui.btn_browse.hide()
+            self.ui.scan_path.clear()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

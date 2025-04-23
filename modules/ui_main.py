@@ -1407,6 +1407,29 @@ class Ui_MainWindow(object):
         
         # Scan controls
         self.horizontalLayout_scan = QHBoxLayout()
+
+        # Add scan type selector
+        self.scan_type_combo = QComboBox(self.antivirusPage)
+        self.scan_type_combo.addItems(["Quick Scan", "Full Scan", "Custom Scan"])
+        self.scan_type_combo.setStyleSheet("""
+            QComboBox {
+                background-color: rgb(33, 37, 43);
+                color: white;
+                border-radius: 5px;
+                padding: 5px;
+                min-height: 30px;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+            QComboBox::down-arrow {
+                image: url(:/icons/images/icons/cil-arrow-bottom.png);
+                width: 12px;
+                height: 12px;
+            }
+        """)
+        self.horizontalLayout_scan.insertWidget(0, self.scan_type_combo)
+
         self.scan_path = QLineEdit(self.antivirusPage)
         self.scan_path.setPlaceholderText("Select folder to scan")
         self.scan_path.setMinimumSize(QSize(0, 30))
@@ -1649,7 +1672,7 @@ class Ui_MainWindow(object):
 # "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" color:#bd93f9;\">Created by: Wanderson M. Pimenta</span></p>\n"
 # "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">Convert UI</span></p>\n"
 # "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:9pt; color:#ffffff;\">pyside6-uic main.ui &gt; ui_main.py</span></p>\n"
-# "<p align=\"center\" style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">Convert QRC</span></p>\n"
+# "<p align=\"center\" " "style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600; color:#ff79c6;\">Convert QRC</span></p>\n"
 # "<p align=\"center\" " "style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:9pt; color:#ffffff;\">pyside6-rcc resources.qrc -o resources_rc.py</span></p></body></html>"
 , None))
         self.titleRightInfo.setText(QCoreApplication.translate("MainWindow", u"FullCleaner - Best Cleaner for Super Speed.", None))
