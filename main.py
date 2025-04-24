@@ -261,32 +261,50 @@ class LicenseDialog(QDialog):
             QMessageBox.critical(self, "Error", f"Error saving license: {str(e)}")
 
 class ScanWorker(QThread):
-    progress = Signal(int)
-    log = Signal(str)
+    progress = Signal(int, str, int, int)
     finished = Signal()
-
-    def __init__(self, selected_tasks):
+    
+    def __init__(self, scan_path=None, scan_type="quick"):
         super().__init__()
-        self.selected_tasks = selected_tasks
+        self.scan_path = scan_path
+        self.scan_type = scan_type
+        self._running = True
+        self.antivirus = AntiVirus()
 
     def run(self):
-        total_tasks = len(self.selected_tasks)
-        if total_tasks == 0:
-            self.log.emit("⚠️ No tasks selected.")
-            self.finished.emit()
-            return
-
-        progress_increment = 100 / total_tasks
-
-        for i, (task_name, task_func) in enumerate(self.selected_tasks, start=1):
-            self.log.emit(f"🔄 Running {task_name} cleanup...")
-            task_func()
-            self.progress.emit(int(i * progress_increment))
-            time.sleep(0.5)
-
-        self.log.emit("✅ Scan complete! Your PC feels lighter already 😉")
-        self.progress.emit(100)
+        if self.scan_type == "quick":
+            self.quick_scan()
+        elif self.scan_type == "full":
+            self.full_scan()
+        elif self.scan_type == "custom" and self.scan_path:
+            self.custom_scan()
         self.finished.emit()
+
+    def stop(self):
+        self._running = False
+        self.antivirus.stop_scan()
+
+    def progress_callback(self, progress, current_file, files_scanned, total_files):
+        if self._running:
+            self.progress.emit(progress, current_file, files_scanned, total_files)
+
+    def quick_scan(self):
+        self.antivirus.start_quick_scan(callback=self.progress_callback)
+        while self._running and self.antivirus.is_scanning:
+            time.sleep(0.1)
+
+    def full_scan(self):
+        self.antivirus.start_full_scan(callback=self.progress_callback)
+        while self._running and self.antivirus.is_scanning:
+            time.sleep(0.1)
+
+    def custom_scan(self):
+        if not self.scan_path:
+            return
+        print(f"Starting custom scan of: {self.scan_path}")  # Debug output
+        self.antivirus.start_scan(self.scan_path, callback=self.progress_callback)
+        while self._running and self.antivirus.is_scanning:
+            time.sleep(0.1)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -426,7 +444,10 @@ class MainWindow(QMainWindow):
         # Initially hide scan path components since Quick Scan is default
         self.ui.scan_path.hide()
         self.ui.btn_browse.hide()
-            
+        
+        self.scan_thread = None
+        self.scanning = False
+
     def check_license(self):
         """Check if license exists and is valid"""
         try:
@@ -913,21 +934,31 @@ class MainWindow(QMainWindow):
 
         if not self.scan_running:
             self.scan_running = True
-            self.scan_button.setText("Running Scan")
-            self.scan_button.setEnabled(False)
+            self.scan_button.setText("Stop Scan")
+            self.scan_button.setEnabled(True)
             self.progress_bar.setValue(0)
             self.console.clear()
 
-            selected_tasks = []
-            for checkbox, (name, func) in zip(self.checkboxes, self.cleaning_options):
-                if checkbox.isChecked():
-                    selected_tasks.append((name, func))
+            # Create scan worker with proper parameters
+            scan_path = None
+            if self.scan_mode == "custom":
+                # Get selected directory from dialog
+                scan_path = QFileDialog.getExistingDirectory(self, "Select Directory to Scan")
+                if not scan_path:
+                    self.scan_running = False
+                    self.scan_button.setText("Start Scan")
+                    return
 
-            self.worker = ScanWorker(selected_tasks)
+            self.worker = ScanWorker(scan_path=scan_path, scan_type=self.scan_mode)
             self.worker.progress.connect(self.update_progress)
-            self.worker.log.connect(self.log_message)
             self.worker.finished.connect(self.scan_finished)
             self.worker.start()
+        else:
+            # Stop the scan
+            if self.worker:
+                self.worker.stop()
+            self.scan_running = False
+            self.scan_button.setText("Start Scan")
 
     def buttonClick(self):
         btn = self.sender()
@@ -1614,87 +1645,65 @@ class MainWindow(QMainWindow):
             self.stop_scan()
     
     def start_quick_scan(self):
-        self.ui.btn_start_scan.setText("Stop Scan")
-        self.ui.scan_progress.setValue(0)
-        self.ui.results_table.setRowCount(0)
-        self.ui.scan_path.setEnabled(False)
-        self.ui.btn_browse.setEnabled(False)
+        self.start_scan("quick")
         
-        def update_progress(progress, current_file, files_scanned, total_files):
-            self.ui.scan_progress.setValue(int(progress))
-            self.ui.scan_status.setText(f"Scanning: {current_file}\nFiles scanned: {files_scanned}/{total_files}")
-            
-            results = self.antivirus.get_results()
-            if results and len(results) > self.ui.results_table.rowCount():
-                row = self.ui.results_table.rowCount()
-                self.ui.results_table.insertRow(row)
-                latest = results[-1]
-                
-                self.ui.results_table.setItem(row, 0, QTableWidgetItem(latest["filepath"]))
-                self.ui.results_table.setItem(row, 1, QTableWidgetItem(latest["status"]))
-                self.ui.results_table.setItem(row, 2, QTableWidgetItem(latest["message"]))
-                self.ui.results_table.setItem(row, 3, QTableWidgetItem(str(latest["timestamp"])))
-        
-        self.scan_thread = self.antivirus.start_quick_scan(update_progress)
-    
     def start_full_scan(self):
-        self.ui.btn_start_scan.setText("Stop Scan")
-        self.ui.scan_progress.setValue(0)
-        self.ui.results_table.setRowCount(0)
-        self.ui.scan_path.setEnabled(False)
-        self.ui.btn_browse.setEnabled(False)
+        self.start_scan("full")
         
-        def update_progress(progress, current_file, files_scanned, total_files):
-            self.ui.scan_progress.setValue(int(progress))
-            self.ui.scan_status.setText(f"Scanning: {current_file}\nFiles scanned: {files_scanned}/{total_files}")
-            
-            results = self.antivirus.get_results()
-            if results and len(results) > self.ui.results_table.rowCount():
-                row = self.ui.results_table.rowCount()
-                self.ui.results_table.insertRow(row)
-                latest = results[-1]
-                
-                self.ui.results_table.setItem(row, 0, QTableWidgetItem(latest["filepath"]))
-                self.ui.results_table.setItem(row, 1, QTableWidgetItem(latest["status"]))
-                self.ui.results_table.setItem(row, 2, QTableWidgetItem(latest["message"]))
-                self.ui.results_table.setItem(row, 3, QTableWidgetItem(str(latest["timestamp"])))
-        
-        self.scan_thread = self.antivirus.start_full_scan(update_progress)
-    
     def start_custom_scan(self):
         scan_path = self.ui.scan_path.text()
         if not scan_path:
             return
+        self.start_scan("custom", scan_path)
+
+    def start_scan(self, scan_type="quick", scan_path=None):
+        if self.scanning:
+            self.stop_scan()
+            return
             
+        self.scanning = True
         self.ui.btn_start_scan.setText("Stop Scan")
         self.ui.scan_progress.setValue(0)
         self.ui.results_table.setRowCount(0)
         self.ui.scan_path.setEnabled(False)
         self.ui.btn_browse.setEnabled(False)
         
-        def update_progress(progress, current_file, files_scanned, total_files):
-            self.ui.scan_progress.setValue(int(progress))
-            self.ui.scan_status.setText(f"Scanning: {current_file}\nFiles scanned: {files_scanned}/{total_files}")
-            
-            results = self.antivirus.get_results()
-            if results and len(results) > self.ui.results_table.rowCount():
-                row = self.ui.results_table.rowCount()
-                self.ui.results_table.insertRow(row)
-                latest = results[-1]
-                
-                self.ui.results_table.setItem(row, 0, QTableWidgetItem(latest["filepath"]))
-                self.ui.results_table.setItem(row, 1, QTableWidgetItem(latest["status"]))
-                self.ui.results_table.setItem(row, 2, QTableWidgetItem(latest["message"]))
-                self.ui.results_table.setItem(row, 3, QTableWidgetItem(str(latest["timestamp"])))
-        
-        self.scan_thread = self.antivirus.start_scan(scan_path, update_progress)
-            
+        self.scan_thread = ScanWorker(scan_path, scan_type)
+        self.scan_thread.progress.connect(self.update_progress)
+        self.scan_thread.finished.connect(self.scan_finished)
+        self.scan_thread.start()
+
     def stop_scan(self):
-        self.antivirus.stop_scan()
+        if self.scan_thread and self.scan_thread.isRunning():
+            self.scan_thread.stop()
+            self.scan_thread.wait()  # Wait for thread to finish
+        self.scanning = False
         self.ui.btn_start_scan.setText("Start Scan")
-        self.ui.scan_status.setText("Scan stopped")
         self.ui.scan_path.setEnabled(True)
         self.ui.btn_browse.setEnabled(True)
+
+    def update_progress(self, progress, current_file, files_scanned, total_files):
+        self.ui.scan_progress.setValue(progress)
+        self.ui.scan_status.setText(f"Scanning: {current_file}\nFiles scanned: {files_scanned}/{total_files}")
+        
+        # Update results table
+        results = self.antivirus.get_results()
+        if results and len(results) > self.ui.results_table.rowCount():
+            row = self.ui.results_table.rowCount()
+            self.ui.results_table.insertRow(row)
+            latest = results[-1]
+            
+            self.ui.results_table.setItem(row, 0, QTableWidgetItem(latest["filepath"]))
+            self.ui.results_table.setItem(row, 1, QTableWidgetItem(latest["status"]))
+            self.ui.results_table.setItem(row, 2, QTableWidgetItem(latest["message"]))
+            self.ui.results_table.setItem(row, 3, QTableWidgetItem(str(latest["timestamp"])))
+
+    def scan_finished(self):
+        self.scanning = False
+        self.ui.btn_start_scan.setText("Start Scan")
+        self.ui.scan_path.setEnabled(True)
+        self.ui.btn_browse.setEnabled(True)
+        self.ui.scan_status.setText("Scan completed")
 
     def on_scan_type_changed(self, scan_type):
         """Handle scan type selection change"""

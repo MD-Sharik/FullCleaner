@@ -26,6 +26,7 @@ class AntiVirus:
         # In a real implementation, you would load from a maintained database
         # For demo, we'll use a small set of known malicious file hashes
         self.virus_signatures = {
+            "ec4cbc88c388a250f47b8b698491600dfba11c78",
             "2ef7bde608ce5404e97d5f042f9,5f89f1c232871",  # Example hash
             "ff7b2c3938306261881c42e78d0df51d9bcdd574",
             "fec5abfbbfcfe580753d45a259b44e38a0a3f208",
@@ -494,13 +495,22 @@ class AntiVirus:
             return None
     
     def scan_file(self, filepath):
-        try:
-            file_hash = self.calculate_file_hash(filepath)
-            if file_hash in self.virus_signatures:
-                return True, "Malware detected"
-            return False, "Clean"
-        except:
-            return None, "Error scanning file"
+            """Scan a single file for viruses"""
+            try:
+                file_hash = self.calculate_file_hash(filepath)
+                print(f"Scanning file: {filepath}")
+                print(f"File hash: {file_hash}")
+                print(f"Known signatures: {self.virus_signatures}")
+                
+                if file_hash in self.virus_signatures:
+                    print("MATCH FOUND - Malware detected!")
+                    return True, "Malware detected"
+                print("No match - File is clean")
+                return False, "Clean"
+            except Exception as e:
+                print(f"Error scanning file: {str(e)}")
+                return None, "Error scanning file"
+
     
     def scan_directory(self, directory, callback=None):
         self.scan_results = []
