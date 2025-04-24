@@ -1,5 +1,6 @@
 import sys
 import os
+import webbrowser
 import platform
 import threading
 import time
@@ -182,7 +183,7 @@ class LicenseDialog(QDialog):
         layout.setSpacing(15)
         
         # Option 1: Generate new key
-        self.generate_btn = QPushButton("Generate New License Key")
+        self.generate_btn = QPushButton("Buy License Key")
         self.generate_btn.clicked.connect(self.generate_license)
         
         # Option 2: Enter existing key
@@ -201,46 +202,7 @@ class LicenseDialog(QDialog):
         
     def generate_license(self):
         """Generate a new license key for this user"""
-        try:
-            # Get current user info
-            if not os.path.exists("session.json"):
-                QMessageBox.warning(self, "Error", "You need to be logged in to generate a license key")
-                return
-                
-            with open("session.json", "r") as f:
-                session_data = json.load(f)
-                
-            user_id = session_data.get("userId", "")
-            email = session_data.get("email", "")
-            
-            if not user_id or not email:
-                QMessageBox.warning(self, "Error", "Invalid session data. Please log in again.")
-                return
-                
-            # Request license key generation
-            response = requests.post(
-                "https://full-cleaner-backend.vercel.app/generate",
-                json={"id": user_id, "email": email},
-                timeout=5
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                license_key = data.get("key", "")
-                
-                if license_key:
-                    # Save license data
-                    with open("license.json", "w") as f:
-                        json.dump({"key": license_key, "valid": True}, f)
-                    
-                    QMessageBox.information(self, "Success", f"Your license key has been generated:\n\n{license_key}\n\nPlease save this key for future reference.")
-                    self.accept()
-                else:
-                    QMessageBox.warning(self, "Error", "Could not generate license key")
-            else:
-                QMessageBox.warning(self, "Error", f"License generation failed: {response.text}")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Connection error: {str(e)}")
+        webbrowser.open("https://cleaner.nouvous.com/")
         
     def activate_license(self):
         """Activate with an existing license key"""
@@ -437,6 +399,16 @@ class MainWindow(QMainWindow):
         self.ui.btn_antivirus.clicked.connect(lambda: self.ui.stackedWidget.setCurrentWidget(self.ui.antivirusPage))
         self.ui.btn_browse.clicked.connect(self.browse_folder)
         self.ui.btn_start_scan.clicked.connect(self.toggle_scan)
+        self.ui.btn_antivirus.setStyleSheet("""
+            QPushButton {
+                background-image: url(:/icons/images/icons/cil-task.png);
+                border-left: 22px solid transparent;
+                background-position: left center;
+                background-repeat: no-repeat;
+                text-align: left;
+                padding-left: 44px;
+            }
+        """)
         
         # Connect scan type combo box change event
         self.ui.scan_type_combo.currentTextChanged.connect(self.on_scan_type_changed)
@@ -1697,6 +1669,11 @@ class MainWindow(QMainWindow):
             self.ui.results_table.setItem(row, 1, QTableWidgetItem(latest["status"]))
             self.ui.results_table.setItem(row, 2, QTableWidgetItem(latest["message"]))
             self.ui.results_table.setItem(row, 3, QTableWidgetItem(str(latest["timestamp"])))
+            
+            # Show notification when malware is found
+            if latest["status"] == "Infected":
+                QMessageBox.warning(self, "Malware Detected", 
+                    f"Malware was detected and removed:\n{latest['filepath']}\n\nStatus: {latest['message']}")
 
     def scan_finished(self):
         self.scanning = False

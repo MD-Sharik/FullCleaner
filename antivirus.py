@@ -26,6 +26,174 @@ class AntiVirus:
         # In a real implementation, you would load from a maintained database
         # For demo, we'll use a small set of known malicious file hashes
         self.virus_signatures = {
+            "04378736da5c2da06bd5b15a41aaccac233df44b",
+            "0832fec447b9b8a90ef4797c7b098b06e198d167",
+            "0ce82be2f436d179b54a0cc6fcc675010822d268",
+            "03a35a0167684e6ccca641296969972e49b88d60",
+            "12ae1d7e2485dbb51aabbdb2b4cec6261cf43116",
+            "1438f9fc50e914cb63b209a3312aa2857a410769",
+            "21b4bf095e7c0eac92af96be1c2c6b0231807142",
+            "235341ef26c356a302b7641f4097a87cc027d5c2",
+            "22d9058c3706e7a713949093f82d8bff4a8afa62",
+            "1929900b68ac8a65d515002d313336781801e3ef",
+            "23ce10c11dcd93bcbf2a4e50d4cd02dc862b9cc4",
+            "23f8f2e7558ed894e800cce9ea352c0d8efb2216",
+            "24117276a118df5095d139aaaac8342f150de94a",
+            "23f1e9788688184712dc2b0eaad4c51584edabd0",
+            "298c100aa98e79e54ca8454f8400e9543791fa15",
+            "3024f8b0439d7c271967d22373604215a4ce0ac4",
+            "21ef3d7adca478145c5d28fcf9c786c5f0aea0e6",
+            "243e21af3c97ff2a6f705c05d0e62e97931d620e",
+            "3115939f4abf600bd0d17cb8aacca3c9cd786e64",
+            "31c5dda0181daac130e900368b97adda8b09b762",
+            "309f1750a63c3bcb8cad83a65a69a401f04c51d2",
+            "378dd134ff6cc55f36496ee717e4efca022bd754",
+            "35c67f8b6f9d6b32a021edd7d59fafe868341c8a",
+            "2b9444b0e1747eb4f482d29c9de27d07cce55a76",
+            "37a4a82075c24dbd3678c037f7abd2dbae49678f",
+            "43e3c3752a15d0bde7135e1b52f1de397b5314b5",
+            "37e8036e20b93a4aed5b6bd600b97cbaf6964567",
+            "3f4e3c5301752d39daf97384cca47564da1c3314",
+            "457c34aeaf4e2e5086221b20fec17df29a6b49d3",
+            "465c4351273ffad066b991bb4ec1956f34ee8082",
+            "45e56d259a7194c7c3adfefd8ada077dc2b800b8",
+            "45b3af39c5ef08f7407b94d564a432503b00275a",
+            "4e7dbff20995e97190536b284d7e5cc65922fd55",
+            "4a54c5dc45ce0047291dc98ad87f42cfe9fa046e",
+            "5036863519737b54c5d68891ee2e3ca795044803",
+            "53bee089331b9bc06dd1ee3fe5e5b8bd3107ffdd",
+            "5a0df60f25538883957d67675ae73a87d10cad91",
+            "550adbb75c7e1cd178cb8c39f0911c494b24c687",
+            "459aece315af3d00342e5dde5fb79e7a908e8460",
+            "5c33a153f221f80c916b7e505f6e2144cd5b88a2",
+            "5d8a4e53a96fd0c7809ba7d9cd6e730da00e1321",
+            "62986c220efea9d64f4903461a8a6d2541ed6a7a",
+            "5eef1ac7df2293d9432362fc586a7a7157b69157",
+            "691aa02384e5121598d21606445ab41325cdfa52",
+            "5f7a338bb99aed422e1a69fe48726d42dbe71854",
+            "5f40f2da77ba7ef01f2ee4143d6022a0ef28c8f1",
+            "67600c5b1b6221385c4b34dbbb80037dffcb171e",
+            "7a9deb71f791eb8d781250b0c8c3d546d91fbde1",
+            "79de0af2f10f8d39a93eed911d4048d87e3c8a1c",
+            "6b5296db642689a5ad249cb66a5ae85ec664fd2c",
+            "7722386c075db083878496875c156c67238758e6",
+            "809048a40274350bd0c453e49d8c1f7d32397164",
+            "81606f1cdb7efcae54c66876fc3f31e84b8f7f15",
+            "7cfa11879af6cea88cffa2aab354fb79bf77132a",
+            "7d6550f8992515f79a43473bebdf2593caf25900",
+            "806aeca473af9afef5a0ab29f30a9a272d9cec51",
+            "83a4f138d57fce4256727e517a8d19e67554c15f",
+            "86377c1b8d54536c79c71f8913b72ca88d230bd4",
+            "87684a3dcaa1488bf0579dc1e27304f6c64f794a",
+            "84e4aab5f5e2afbfa5b314d720e02e33c49d526d",
+            "8bb125624b52e3d2d82c272a0d1dd3906e1c3978",
+            "8c0c39418339a0458809125de1a88a0c005694bd",
+            "89014d65d24dc14357a34d1d251e4cd43de6856d",
+            "8aa46b8d0c47d447b87920a5a7494ce235707d7d",
+            "911bc1e7c3d2295bb5ad01412c6fdcf2d937bd41",
+            "93a625513ecba05c56f6ac45de3a5745edabfe2a",
+            "8e7818cc76da718c6d35d430e9d4763ecb940318",
+            "94e75ba7c4476afdacf4b39e403379c5ecd1bed6",
+            "92f3ae51657659098c0a0110b9a681d32b77e9c1",
+            "9826aa25f2f005f9567f512f540cbed4d054692f",
+            "994ead7666a67e33c57a51ef98076d41aabb7fb7",
+            "99f7ef4d8eb9903543ce9c8201baa342d242b6ae",
+            "9d7cf542cb3af7bf3e364ef01c73f3c74b0abae2",
+            "97ed514f7510852c558a1b32c99f56ebc460dd8b",
+            "9e25e2a18f1dc3a38c59a1408f982d895ce1b9b4",
+            "a02bcb0aa90004651c87873d9387dc6c00367643",
+            "a0a2768d500714f62b64b57185e71140d3c993d1",
+            "a19ba5d1ea315e0ca3a9a3ea6ccffc756404cec0",
+            "9b03c838727fa3ada42bb4fa0422129ebfabf7bb",
+            "a22318388bbe3014d087e20f1a2bf363071ade0a",
+            "a4ac86b005c20d239cd0088d774ced701adc1d01",
+            "a9febe898daef40e7819a7b3bfef19462db894c5",
+            "ab9bf33a0cc0e676c4f843b1dc163861e6b13b6f",
+            "addafa922ef03e0fe25ab53cf8eb62f4c1cbdc02",
+            "b601e9249d53b22e43c01f83d2356e9c7b41a443",
+            "b7f0c0a26df905aed543658df3d752de363ab8a3",
+            "aa442a83b7cd173734552b6611c50d050efe8277",
+            "b48cbb7a5f9bfbfbfb07113fb3728132d528e1f3",
+            "b87cc5269a5df5cf093f8d28df78952f662162b6",
+            "b6371ef797c85f87128a696ec9c9edb93d90aae2",
+            "c77cfd19d504da2639bf51e96ac27db3ff455d45",
+            "b810ed016e708f1c828dce82051c4b265794d583",
+            "bb39a928343d04a38addf122449d68fddf5f7e29",
+            "c7d4cf00bd2d90e03191657b89b75bfc9d2df5d8",
+            "bf90d666626423741576072547c19b9ccd1459a7",
+            "d5637caf5a931335b6b887a5ccbe36fffa6b4f9c",
+            "cc820ed9a23084104807941b76a2679243ba357c",
+            "db3f13d29a64205780b9a675019405bb338ca375",
+            "d0f05a5ad4e13610605b2d4b60854bfc002799c2",
+            "e50765d980fd662f4e5c5609cb1876ab67815ef5",
+            "e889e5bbb128e38c0924a67c0946c699bd2de3b3",
+            "f5505b35c9e9b6515875bea5c0bbf564add4939e",
+            "f26f43ad2e2980b96497242a3f30ca003e5cf54c",
+            "f3b714698311bd6b7984f0dafa425f71f07c764c",
+            "f074085be2a913c54100686fe7ef274a53323bda",
+            "820ad7e30b4c54692d07b29361aecd0bb14df3be",
+            "b3b1edd6b80af0cdadadd1ee1448056e6e1b3274",
+            "3228e6bc8c738781176e65ebbc0eb52020a44866",
+            "5485c627922a71b04d4c78fbc25985cdb163313b",
+            "1a62031bbb2c3f55d44f59917fd32e4ed2041224",
+            "db11cbffe30e0094d6de48259c5a919c1eb57108",
+            "1aae62acee3c04a6728f9edc3756fabd6e342252",
+            "0be8f44f5351a6cbef1a54a6de7674e1219d65b6",
+"            0be56a8c0d0de11e0e97b563cae6d1ee164f3317",
+"            1e3d4230655411cb5f7c6885d7f947072b8f9f0f",
+"            2fdd49a3f7d06fffd32b40d35abd69dec851eb77",
+"            3ac205be62806a90072524c193b731a1423d5dfd",
+"            6abf731b90c11ffbd3406aa6b89261cc9596fefd",
+"            8e99a5ec8c173033941f5e00a3fc38b7dea9dcb3",
+"            15adffda49c07946d4bd41ab44846eb673c22b2b",
+"            47db52ab94b9a303e85ed1aa1dd949605157417e",
+"            70bc8c2dc62cf894e765950de60ec5bd2128d55b",
+"            88b125dda928462fdb00c459131b232a3cd21887",
+"            90a443787b464877ad9eb57536f51556b5ba8117",
+"            249bed77c1349be7ec1fc182afccb1234adfacdf",
+"            3101b17d73031384f555ae3acd7139bbbab3f525",
+"            8946e40255b57e95bab041687a2f0f0e15f5ffce",
+"            946082f225c76f2ffbe92235f0faf9fb9e33b784",
+"            a8acf307ea747b24d7c405deef70b50b2b3f2186",
+"            f8039d04ff310cef9ca47ac03025bd38a3587d10",
+"            d2ff84892f3a4e4436bedc221102adbcac3e23dc",
+"            bb6a9fb0c5da4972efab14a629adba5f92a50eac",
+"            394cfa4150e7d47bbda1450bc487fc4b970edb35",
+"            3734bc2d9c321604fea11bf550491b5fda804f70",
+"            7db6780a1e09aec6146ed176bd6b9df27f85cfc1",
+"            fb8f64d2fec152d2d135bbe9f6945066b540fde5",
+"            71076bd712c2e3bc8ca55b789031be222cfdeea7",
+"            9a6c731e96572399b236da9641be904d142f1556",
+"            57e4eb244f3450854e5b740b95d00d18a535d119",
+"            7d99e7ad21b54f07e857fc06e54425cd17de3003",
+"            db87aa88f358d9517eeb69d6faee7078e603f23c",
+"            fad97ec6447a699179b0d2509360ffb3dd0b06bf",
+"            ef2106a0a40bb5c1a74a00b1d5a6716489667b4c",
+"            178c054c5370e0dc9df8250ca6efbcded995cf09",
+"            7ed3efda8fc446182792339aa14bc7a83a272f85",
+"            af021e767e68f6ce1d20b28aa1b36b6288afffa5",
+"            667133feba54801b0881705ff287a24a874a400b",
+"            4ef2761f27b0260c518ef207e668c4379eb29892",
+"            99560d3e9e0559fa7dd6b56f31e9bb7e017ca363",
+            "068FD2D209C0BBB0C6FC14E88D63F92441163233",
+            "2DB60F0ADEF14F4AB3573F8309E6FB135F67ED7D",
+            "AD4F0428FC9290791D550EEDDF171AFF046C4C2C",
+            "401571851A7CF71783A4CB902DB81084F0A97F85",
+            "846C025F696DA1F6808B9101757C005109F3CF3D",
+            "5A79AEA546B04292C099137AF4740A944F02963A",
+            "6B6E16C6E4E5301BE715642179B8E19E91F777A4",
+            "B5A5DA09114F1E8443DAF13A799F2645C135B0BC",
+            "EEDA5D66285FF8E0BAAB8621994BF1D365188721",
+            "C58D6AC9D0B2D4E1144490CCDE581D9C34CBB38E",
+            "D22B0DB144C1B42B1CE2A1741C83D845092FCC61",
+            "00385604A792B8874238E9B0ABC98A423135B2F4",
+            "D1EB4427BDB7F59A01FDA60811708F07308F7987",
+            "3C36574E7683A2C6382DC55345B7D1D544C1C1EF",
+            "B5B5AB0074F81C02F27D263BC3723809BE0D86A8",
+            "4B194770F6054C513B5A3821CB94FEEA58C09D3C",
+            "0FA9C4958FBD8513A41056938D5FBCE6C63BBE03",
+            "5977A9538627BF274C438FD04A6E20E1A5BA3A4A",
+            "EEB4A930EF2D4547B96F06AC6783B06E215C2F13",
             "ec4cbc88c388a250f47b8b698491600dfba11c78",
             "2ef7bde608ce5404e97d5f042f9,5f89f1c232871",  # Example hash
             "ff7b2c3938306261881c42e78d0df51d9bcdd574",
@@ -494,22 +662,33 @@ class AntiVirus:
         except:
             return None
     
+    def remove_infected_file(self, filepath):
+        """Remove an infected file safely"""
+        try:
+            os.remove(filepath)
+            return True
+        except Exception as e:
+            print(f"Error removing file {filepath}: {str(e)}")
+            return False
+
     def scan_file(self, filepath):
-            """Scan a single file for viruses"""
-            try:
-                file_hash = self.calculate_file_hash(filepath)
-                print(f"Scanning file: {filepath}")
-                print(f"File hash: {file_hash}")
-                print(f"Known signatures: {self.virus_signatures}")
-                
-                if file_hash in self.virus_signatures:
-                    print("MATCH FOUND - Malware detected!")
-                    return True, "Malware detected"
-                print("No match - File is clean")
-                return False, "Clean"
-            except Exception as e:
-                print(f"Error scanning file: {str(e)}")
-                return None, "Error scanning file"
+        """Scan a single file for viruses"""
+        try:
+            file_hash = self.calculate_file_hash(filepath)
+            print(f"Scanning file: {filepath}")
+            print(f"File hash: {file_hash}")
+            
+            if file_hash in self.virus_signatures:
+                print("MATCH FOUND - Malware detected!")
+                if self.remove_infected_file(filepath):
+                    return True, "Malware detected and removed"
+                else:
+                    return True, "Malware detected but could not be removed"
+            print("No match - File is clean")
+            return False, "Clean"
+        except Exception as e:
+            print(f"Error scanning file: {str(e)}")
+            return None, "Error scanning file"
 
     
     def scan_directory(self, directory, callback=None):
